@@ -150,7 +150,7 @@ const createLaporan = async (req, res) => {
       // Path file jika ada upload
       let fotoPath = null;
       if (req.file) {
-        fotoPath = `/uploads/${req.file.filename}`;
+      fotoPath = `/uploads/${req.file.filename}`;
       }
 
       // Buat laporan
