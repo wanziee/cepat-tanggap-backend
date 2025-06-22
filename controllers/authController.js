@@ -98,6 +98,106 @@ const login = async (req, res) => {
   }
 };
 
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validasi input
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email dan password harus diisi' 
+      });
+    }
+
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Format email tidak valid'
+      });
+    }
+
+    // Cari user berdasarkan email
+    const user = await User.scope(null).findOne({ 
+      where: { 
+        email,
+        role: 'admin' // Pastikan hanya admin yang bisa login
+      } 
+    });
+
+    // Validasi user
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau password salah'
+      });
+    }
+
+    // Validasi password
+    const isPasswordValid = await user.validPassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau password salah'
+      });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        role: user.role,
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { 
+        expiresIn: '8h', // Token berlaku 8 jam untuk admin
+        issuer: 'cepat-tanggap-admin'
+      }
+    );
+
+    // Siapkan data user untuk response
+    const userData = {
+      id: user.id,
+      nama: user.nama,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+
+    // Set HTTP-only cookie
+    res.cookie('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Hanya HTTPS di production
+      sameSite: 'lax',
+      maxAge: 8 * 60 * 60 * 1000, // 8 jam
+      path: '/',
+      domain: 'localhost'
+    });
+
+    // Response
+    res.status(200).json({
+      success: true,
+      message: 'Login admin berhasil',
+      data: {
+        user: userData,
+        token: token // Tetap kirim token di response untuk mobile/SPA
+      }
+    });
+
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan server',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     if (!req.user) {
@@ -127,8 +227,6 @@ const updateProfile = async (req, res) => {
       if (emailUsed) {
         return res.status(400).json({ message: 'Email sudah digunakan oleh pengguna lain' });
       }
-
-      updateData.email = email;
     }
 
     const user = await User.findByPk(userId);
@@ -137,16 +235,8 @@ const updateProfile = async (req, res) => {
     }
 
     await user.update(updateData);
-    await user.reload();
 
-    const userData = user.get({ plain: true });
-    delete userData.password;
-
-    res.status(200).json({
-      success: true,
-      message: 'Profil berhasil diperbarui',
-      user: userData
-    });
+    res.json({ message: 'Profil berhasil diperbarui' });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Terjadi kesalahan server' });
@@ -155,19 +245,16 @@ const updateProfile = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Tidak terautentikasi' });
+    }
+
     const user = await User.findByPk(req.user.id, {
+      include: ['laporan'],
       attributes: {
         exclude: ['password'],
         include: ['email', 'no_hp']
-      },
-      include: [
-        {
-          association: 'laporan',
-          attributes: ['id', 'kategori', 'deskripsi', 'status', 'created_at'],
-          limit: 5,
-          order: [['created_at', 'DESC']]
-        }
-      ]
+      }
     });
 
     if (!user) {
@@ -196,9 +283,84 @@ const getProfile = async (req, res) => {
   }
 };
 
+const getMe = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Tidak terautentikasi' 
+      });
+    }
+
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User tidak ditemukan' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: user.id,
+        nama: user.nama,
+        email: user.email,
+        nik: user.nik,
+        role: user.role,
+        alamat: user.alamat,
+        no_hp: user.no_hp,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Get me error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Terjadi kesalahan server',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Tidak terautentikasi' });
+    }
+
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    const isPasswordValid = await user.validPassword(oldPassword);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Password lama salah' });
+    }
+
+    await user.update({ password: newPassword });
+
+    res.json({ message: 'Password berhasil diperbarui' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+};
+
 module.exports = {
   register,
   login,
+  adminLogin,
   getProfile,
-  updateProfile
+  getMe,
+  updateProfile,
+  changePassword
 };
