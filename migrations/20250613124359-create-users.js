@@ -1,54 +1,59 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('users', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable("users", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       nik: {
         type: Sequelize.STRING(16),
         allowNull: false,
-        unique: true
+        unique: true,
       },
       nama: {
         type: Sequelize.STRING(100),
-        allowNull: false
+        allowNull: false,
       },
       password: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: false,
       },
       role: {
-        type: Sequelize.ENUM('warga', 'rt', 'rw', 'admin'),
+        type: Sequelize.ENUM("warga", "rt", "rw", "admin"),
         allowNull: false,
-        defaultValue: 'warga'
+        defaultValue: "warga",
       },
       alamat: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
       },
       no_hp: {
         type: Sequelize.STRING(20),
-        allowNull: true
+        allowNull: true,
+      },
+      email: {
+        type: Sequelize.STRING(100),
+        allowNull: true, // atau false kalau ingin wajib
+        unique: true,
       },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
+        defaultValue: Sequelize.fn("NOW"),
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
-      }
+        defaultValue: Sequelize.fn("NOW"),
+      },
     });
   },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('users');
-  }
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("users");
+  },
 };

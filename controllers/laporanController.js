@@ -40,7 +40,8 @@ const getAllLaporan = async (req, res) => {
           order: [['created_at', 'DESC']]
         }
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
+      attributes: { exclude: ['password'] } // Exclude password field
     });
 
     res.json({ message: 'Daftar laporan berhasil diambil', data: laporan });
@@ -81,7 +82,8 @@ const getAllLaporanPublic = async (req, res) => {
           order: [['created_at', 'DESC']]
         }
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
+      attributes: { exclude: ['password'] } // Exclude password field
     });
 
     res.json({ message: 'Daftar laporan warga berhasil diambil', data: laporan });
@@ -140,11 +142,11 @@ const createLaporan = async (req, res) => {
         return res.status(400).json({ message: err.message });
       }
 
-      const { judul, deskripsi, lokasi } = req.body;
+      const { kategori, deskripsi, lokasi } = req.body;
       
       // Validasi input
-      if (!judul || !deskripsi) {
-        return res.status(400).json({ message: 'Judul dan deskripsi harus diisi' });
+      if (!kategori || !deskripsi) {
+        return res.status(400).json({ message: 'Kategori dan deskripsi harus diisi' });
       }
 
       // Path file jika ada upload
@@ -156,7 +158,7 @@ const createLaporan = async (req, res) => {
       // Buat laporan
       const laporan = await Laporan.create({
         user_id: req.user.id,
-        judul,
+        kategori,
         deskripsi,
         foto: fotoPath,
         lokasi: lokasi || null,

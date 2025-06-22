@@ -6,6 +6,11 @@ module.exports = (sequelize, DataTypes) => {
       Laporan.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
       Laporan.hasMany(models.LogStatus, { foreignKey: 'laporan_id', as: 'logStatus' });
     }
+
+    // Method untuk mendapatkan display text dari kategori
+    getKategoriDisplay() {
+      return this.kategori;
+    }
   }
 
   Laporan.init({
@@ -22,8 +27,19 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    judul: {
-      type: DataTypes.STRING(100),
+    kategori: {
+      type: DataTypes.ENUM(
+        'Fasilitas Umum',
+        'Jalan & Transportasi',
+        'Sampah & Kebersihan',
+        'Air & Drainase',
+        'Keamanan',
+        'Kesehatan',
+        'Listrik & PJU',
+        'Bangunan Liar',
+        'Lingkungan Sosial',
+        'Lainnya'
+      ),
       allowNull: false
     },
     deskripsi: {
@@ -46,7 +62,12 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Laporan',
     tableName: 'laporan',
     timestamps: true,
-    underscored: true
+    underscored: true,
+    defaultScope: {
+      attributes: {
+        exclude: ['password']
+      }
+    }
   });
 
   return Laporan;

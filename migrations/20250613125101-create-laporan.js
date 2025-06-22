@@ -20,8 +20,19 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-      judul: {
-        type: Sequelize.STRING(100),
+      kategori: {
+        type: Sequelize.ENUM(
+          'Fasilitas Umum',
+          'Jalan & Transportasi',
+          'Sampah & Kebersihan',
+          'Air & Drainase',
+          'Keamanan',
+          'Kesehatan',
+          'Listrik & PJU',
+          'Bangunan Liar',
+          'Lingkungan Sosial',
+          'Lainnya'
+        ),
         allowNull: false
       },
       deskripsi: {
@@ -53,6 +64,10 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
+    // Drop ENUM type first on Postgres when rolling back
     await queryInterface.dropTable('laporan');
+    if (queryInterface.sequelize.getDialect() === 'postgres') {
+      await queryInterface.sequelize.query('DROP TYPE IF EXISTS enum_laporan_kategori;');
+    }
   }
 };
