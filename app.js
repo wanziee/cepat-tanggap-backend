@@ -58,7 +58,9 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: {
       auth: '/api/auth',
-      laporan: '/api/laporan'
+      laporan: '/api/laporan',
+      users: '/api/users',
+      rekapKas: '/api/rekap-kas'
     },
     documentation: 'https://docs.cepattanggap.api'
   });
@@ -73,8 +75,10 @@ app.use('/api/laporan', laporanRoutes);
 
 // 2. Rute Users
 const usersRouter = require('./routes/users');
+const rekapKasRouter = require('./routes/rekapKas');
 
 app.use('/api/users', usersRouter);
+app.use('/api/rekap-kas', rekapKasRouter);
 
 
 

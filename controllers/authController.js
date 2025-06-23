@@ -98,17 +98,20 @@ const login = async (req, res) => {
   }
 };
 
+
+
 const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Validasi input
     if (!email || !password) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Email dan password harus diisi' 
-      });
-    }
+  return res.status(400).json({ 
+    success: false,
+    message: 'Email dan password harus diisi' 
+  });
+}
+
 
     // Validasi format email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -123,7 +126,7 @@ const adminLogin = async (req, res) => {
     const user = await User.scope(null).findOne({ 
       where: { 
         email,
-        role: 'admin' // Pastikan hanya admin yang bisa login
+        role: ['admin', 'rt', 'rw' ]// Pastikan hanya admin yang bisa login
       } 
     });
 
@@ -204,13 +207,15 @@ const updateProfile = async (req, res) => {
       return res.status(401).json({ message: 'Tidak terautentikasi' });
     }
 
-    const { nama, alamat, no_hp, email } = req.body;
+    const { nama, alamat, no_hp, email, rt, rw } = req.body;
     const userId = req.user.id;
 
     const updateData = {};
     if (nama !== undefined) updateData.nama = nama;
     if (alamat !== undefined) updateData.alamat = alamat;
     if (no_hp !== undefined) updateData.no_hp = no_hp;
+    if (rt !== undefined) updateData.rt = rt;
+    if (rw !== undefined) updateData.rw = rw;
 
     if (email !== undefined) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -271,6 +276,8 @@ const getProfile = async (req, res) => {
       alamat: userData.alamat || null,
       email: userData.email || null,
       no_hp: userData.no_hp || null,
+      rt: userData.rt || null,
+      rw: userData.rw || null,
       created_at: userData.created_at,
       updated_at: userData.updated_at,
       laporan: userData.laporan || []
@@ -313,6 +320,8 @@ const getMe = async (req, res) => {
         role: user.role,
         alamat: user.alamat,
         no_hp: user.no_hp,
+        rt: user.rt,
+        rw: user.rw,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }

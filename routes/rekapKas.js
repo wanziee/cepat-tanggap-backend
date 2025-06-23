@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { auth } = require('../middlewares/auth');
-const userController = require('../controllers/userController.js');
+const rekapKasController = require('../controllers/rekapKasController');
 
-console.log('Menginisialisasi router users...');
+console.log('Menginisialisasi router rekap kas...');
 
 // Middleware untuk logging
 router.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
   next();
 });
 
@@ -34,29 +35,29 @@ router.use((req, res, next) => {
   }
 });
 
-// Rute untuk mendapatkan semua user dengan filter opsional
+// Rute untuk mendapatkan semua rekap kas dengan filter opsional
 router.get('/', (req, res, next) => {
-  console.log('GET /api/users dipanggil dengan query:', req.query);
+  console.log('GET /api/rekap-kas dipanggil dengan query:', req.query);
   next();
-}, userController.getAllUsers);
+}, rekapKasController.getAllRekapKas);
 
-// Rute untuk mendapatkan detail user berdasarkan ID
-router.get('/:id', (req, res, next) => {
-  console.log(`GET /api/users/${req.params.id} dipanggil`);
+// Rute untuk menambahkan rekap kas baru
+router.post('/', (req, res, next) => {
+  console.log('POST /api/rekap-kas dipanggil dengan data:', req.body);
   next();
-}, userController.getUserById);
+}, rekapKasController.createRekapKas);
 
-// Rute untuk memperbarui data user
+// Rute untuk memperbarui rekap kas
 router.put('/:id', (req, res, next) => {
-  console.log(`PUT /api/users/${req.params.id} dipanggil dengan data:`, req.body);
+  console.log(`PUT /api/rekap-kas/${req.params.id} dipanggil dengan data:`, req.body);
   next();
-}, userController.updateUser);
+}, rekapKasController.updateRekapKas);
 
-// Rute untuk menghapus user
+// Rute untuk menghapus rekap kas
 router.delete('/:id', (req, res, next) => {
-  console.log(`DELETE /api/users/${req.params.id} dipanggil`);
+  console.log(`DELETE /api/rekap-kas/${req.params.id} dipanggil`);
   next();
-}, userController.deleteUser);
+}, rekapKasController.deleteRekapKas);
 
-console.log('Router users berhasil diinisialisasi');
+console.log('Router rekap kas berhasil diinisialisasi');
 module.exports = router;

@@ -102,7 +102,7 @@ const getLaporanById = async (req, res) => {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'nama', 'role']
+          attributes: ['id', 'nama', 'role', 'alamat', 'email', 'no_hp']
         },
         {
           model: LogStatus,

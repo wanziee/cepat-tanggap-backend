@@ -40,6 +40,16 @@ module.exports = {
         allowNull: true, // atau false kalau ingin wajib
         unique: true,
       },
+      rt: {
+        type: Sequelize.STRING(3),
+        allowNull: true,
+        comment: 'Nomor RT'
+      },
+      rw: {
+        type: Sequelize.STRING(3),
+        allowNull: true,
+        comment: 'Nomor RW'
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
