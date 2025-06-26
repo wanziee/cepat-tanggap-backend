@@ -1,8 +1,9 @@
+// utils/upload.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Pastikan folder uploads ada
+// Buat folder upload jika belum ada
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -15,12 +16,20 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, 'laporan-' + uniqueSuffix + ext);
+
+    // Deteksi jenis file berdasarkan URL
+    let prefix = 'file'; // default
+    if (req.originalUrl.includes('/status')) {
+      prefix = 'tanggapan';
+    } else if (req.originalUrl.includes('/laporan')) {
+      prefix = 'laporan';
+    }
+
+    cb(null, `${prefix}-${uniqueSuffix}${ext}`);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  // Terima hanya file gambar
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
@@ -29,11 +38,9 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // Batas 5MB
-  }
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 module.exports = upload;

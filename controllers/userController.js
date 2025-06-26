@@ -52,6 +52,61 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+
+
+// Create new user (warga)
+const createUser = async (req, res) => {
+  try {
+    const { nik, nama, email, no_hp, alamat, rt, rw, role } = req.body;
+
+    // Validasi data sederhana
+    if (!nik || !nama || !no_hp || !rt || !rw) {
+      return res.status(400).json({
+        success: false,
+        message: 'Data tidak lengkap. Pastikan semua kolom wajib diisi.',
+      });
+    }
+
+    // Cek apakah NIK sudah digunakan
+    const existingUser = await User.findOne({ where: { nik } });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'NIK sudah terdaftar.',
+      });
+    }
+const emailToSave = email?.trim() === "" ? null : email;
+    const newUser = await User.create({
+      nik,
+      nama,
+      email: emailToSave,
+      no_hp,
+      alamat,
+      rt,
+      rw,
+      role: role || 'warga', 
+  password: no_hp,
+    });
+
+    const responseUser = newUser.get({ plain: true });
+    delete responseUser.password;
+
+    res.status(201).json({
+      success: true,
+      message: 'Warga berhasil ditambahkan',
+      data: responseUser,
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan server',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+
 // Get user by ID
 const getUserById = async (req, res) => {
   try {
@@ -204,5 +259,6 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  createUser,
 };

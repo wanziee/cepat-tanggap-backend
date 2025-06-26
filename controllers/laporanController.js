@@ -155,9 +155,28 @@ const createLaporan = async (req, res) => {
       fotoPath = `/uploads/${req.file.filename}`;
       }
 
+      const moment = require('moment');
+const { Op } = require('sequelize');
+
+// generate kode laporan
+const today = moment().format('YYYYMMDD');
+const countToday = await Laporan.count({
+  where: {
+    created_at: {
+      [Op.gte]: moment().startOf('day').toDate(),
+      [Op.lt]: moment().endOf('day').toDate()
+    }
+  }
+});
+const sequence = String(countToday + 1).padStart(4, '0');
+const kd_laporan = `LAP${today}${sequence}`;
+
+
+
       // Buat laporan
       const laporan = await Laporan.create({
         user_id: req.user.id,
+        kd_laporan,
         kategori,
         deskripsi,
         foto: fotoPath,
@@ -206,71 +225,63 @@ const createLaporan = async (req, res) => {
     }
   });
 };
+const updateLaporanStatus = (req, res) => {
+  uploadFile(req, res, async (err) => {
+    try {
+      if (err) {
+        return res.status(400).json({ message: err.message });
+      }
 
-const updateLaporanStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
+      const { id } = req.params;
+      const { status, tanggapan } = req.body;
 
-    // Validasi status
-    if (!['pending', 'diproses', 'selesai'].includes(status)) {
-      return res.status(400).json({ message: 'Status tidak valid' });
+      if (!['pending', 'diproses', 'selesai', 'ditolak'].includes(status)) {
+        return res.status(400).json({ message: 'Status tidak valid' });
+      }
+
+      const laporan = await Laporan.findByPk(id);
+      if (!laporan) {
+        return res.status(404).json({ message: 'Laporan tidak ditemukan' });
+      }
+
+      if (req.user.role === 'warga' && laporan.user_id !== req.user.id) {
+        return res.status(403).json({ message: 'Tidak berhak mengubah status ini' });
+      }
+
+      // 1. Update status laporan
+      await laporan.update({ status });
+
+      // 2. Buat log status baru
+      await LogStatus.create({
+        laporan_id: laporan.id,
+        user_id: req.user.id,
+        status,
+        tanggapan: tanggapan || null,
+        waktu: new Date(),
+        foto: req.file ? `/uploads/${req.file.filename}` : null // tambahkan path foto jika ada
+      });
+
+      // 3. Ambil data laporan terbaru
+      const updated = await Laporan.findByPk(laporan.id, {
+        include: [
+          { model: User, as: 'user', attributes: ['id', 'nama', 'role'] },
+          {
+            model: LogStatus,
+            as: 'logStatus',
+            include: [{ model: User, as: 'user', attributes: ['id', 'nama', 'role'] }],
+            order: [['created_at', 'DESC']]
+          }
+        ]
+      });
+
+      res.json({ message: 'Status dan tanggapan diperbarui', data: updated });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Terjadi kesalahan server' });
     }
-
-    // Cari laporan
-    const laporan = await Laporan.findByPk(id);
-    if (!laporan) {
-      return res.status(404).json({ message: 'Laporan tidak ditemukan' });
-    }
-
-    // Jika bukan admin/rt/rw dan bukan pemilik laporan
-    if (req.user.role === 'warga' && laporan.user_id !== req.user.id) {
-      return res.status(403).json({ message: 'Anda tidak berhak mengubah status laporan ini' });
-    }
-
-    // Update status laporan
-    await laporan.update({ status });
-
-    // Buat log status baru
-    await LogStatus.create({
-      laporan_id: laporan.id,
-      user_id: req.user.id,
-      status,
-      waktu: new Date()
-    });
-
-    // Ambil data laporan terbaru
-    const updatedLaporan = await Laporan.findByPk(laporan.id, {
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id', 'nama', 'role']
-        },
-        {
-          model: LogStatus,
-          as: 'logStatus',
-          include: [
-            {
-              model: User,
-              as: 'user',
-              attributes: ['id', 'nama', 'role']
-            }
-          ],
-          order: [['created_at', 'DESC']]
-        }
-      ]
-    });
-
-    res.json({
-      message: 'Status laporan berhasil diperbarui',
-      data: updatedLaporan
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Terjadi kesalahan server' });
-  }
+  });
 };
+
 
 const deleteLaporan = async (req, res) => {
   try {

@@ -27,6 +27,7 @@ module.exports = {
           'Sampah & Kebersihan',
           'Air & Drainase',
           'Keamanan',
+          'Parkir Liar',
           'Kesehatan',
           'Listrik & PJU',
           'Bangunan Liar',
@@ -46,7 +47,7 @@ module.exports = {
         type: Sequelize.STRING(255)
       },
       status: {
-        type: Sequelize.ENUM('pending', 'diproses', 'selesai'),
+        type: Sequelize.ENUM('pending', 'diproses', 'selesai', 'ditolak'),
         allowNull: false,
         defaultValue: 'pending'
       },
@@ -64,10 +65,10 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    // Drop ENUM type first on Postgres when rolling back
     await queryInterface.dropTable('laporan');
     if (queryInterface.sequelize.getDialect() === 'postgres') {
       await queryInterface.sequelize.query('DROP TYPE IF EXISTS enum_laporan_kategori;');
+      await queryInterface.sequelize.query('DROP TYPE IF EXISTS enum_laporan_status;');
     }
   }
 };

@@ -21,7 +21,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       status: {
-        type: Sequelize.ENUM('pending', 'diproses', 'selesai'),
+        type: Sequelize.ENUM('pending', 'diproses', 'selesai', 'ditolak'),
         allowNull: false
       },
       user_id: {
@@ -39,6 +39,10 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: Sequelize.fn('NOW')
       },
+      //       tanggapan: {
+      //   type: Sequelize.TEXT,
+      //   allowNull: true
+      // },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

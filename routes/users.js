@@ -40,6 +40,13 @@ router.get('/', (req, res, next) => {
   next();
 }, userController.getAllUsers);
 
+// Rute untuk membuat user baru
+router.post('/', (req, res, next) => {
+  console.log('POST /api/users dipanggil dengan data:', req.body);
+  next();
+}, userController.createUser);
+
+
 // Rute untuk mendapatkan detail user berdasarkan ID
 router.get('/:id', (req, res, next) => {
   console.log(`GET /api/users/${req.params.id} dipanggil`);

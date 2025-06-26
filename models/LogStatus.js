@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     status: {
-      type: DataTypes.ENUM('pending', 'diproses', 'selesai'),
+      type: DataTypes.ENUM('pending', 'diproses', 'selesai', 'ditolak'),
       allowNull: false
     },
     user_id: {
@@ -38,7 +38,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
-    }
+    },
+    
+      tanggapan: {
+            type: DataTypes.TEXT,
+    allowNull: true
+      },
+      foto: {
+            type: DataTypes.TEXT,
+    allowNull: true
+      },
+
   }, {
     sequelize,
     modelName: 'LogStatus',

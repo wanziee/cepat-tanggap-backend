@@ -19,6 +19,12 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
+    kd_laporan: {
+  type: DataTypes.STRING(30),
+  allowNull: false,
+  unique: true
+},
+
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -53,7 +59,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(255)
     },
     status: {
-      type: DataTypes.ENUM('pending', 'diproses', 'selesai'),
+      type: DataTypes.ENUM('pending', 'diproses', 'selesai', 'ditolak'),
       allowNull: false,
       defaultValue: 'pending'
     }
