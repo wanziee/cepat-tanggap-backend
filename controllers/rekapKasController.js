@@ -31,7 +31,7 @@ const getAllRekapKas = async (req, res) => {
       if (endDate) whereClause.tanggal[Op.lte] = new Date(endDate);
     }
     
-    const rekapKas = await RekapKas.findAll({
+    const rawKas = await RekapKas.findAll({
       where: whereClause,
       include: [{
         model: User,
@@ -41,10 +41,21 @@ const getAllRekapKas = async (req, res) => {
       order: [['tanggal', 'DESC']]
     });
     
+    const rekapKas = rawKas.map(item => {
+  const plain = item.get({ plain: true });
+  return {
+    ...plain,
+    jumlah: Number(plain.jumlah),
+    saldo: Number(plain.saldo),
+  };
+});
+    
     res.status(200).json({
       success: true,
       data: rekapKas
     });
+
+    
   } catch (error) {
     console.error('Get all rekap kas error:', error);
     res.status(500).json({
