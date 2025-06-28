@@ -162,14 +162,20 @@ const adminLogin = async (req, res) => {
     );
 
     // Siapkan data user untuk response
-    const userData = {
-      id: user.id,
-      nama: user.nama,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt
-    };
+const userData = {
+  id: user.id,
+  nama: user.nama,
+  email: user.email,
+  nik: user.nik,        // ← tambahkan jika frontend pakai
+  role: user.role,
+  rt: user.rt,          // ← tambahkan
+  rw: user.rw,          // ← tambahkan
+  alamat: user.alamat,
+  no_hp: user.no_hp,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt
+};
+
 
     // Set HTTP-only cookie
     res.cookie('admin_token', token, {
