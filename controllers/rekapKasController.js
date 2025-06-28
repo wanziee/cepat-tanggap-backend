@@ -67,41 +67,65 @@ const getAllRekapKas = async (req, res) => {
 };
 
 // Create new rekap kas
+// ... (bagian atas kode yang sama) ...
+
+// Create new rekap kas
 const createRekapKas = async (req, res) => {
   try {
-    const { tanggal, keterangan, jenis, jumlah, saldo, rt, rw } = req.body;
+    // Hapus 'saldo' dari destructuring req.body karena kita tidak akan mengirimnya dari frontend
+    const { tanggal, keterangan, jenis, jumlah, rt, rw } = req.body; 
     const userId = req.user.id;
     
-    // Validasi input
-    if (!tanggal || !keterangan || !jenis || !jumlah || !saldo) {
+    // Validasi input: Pastikan saldo TIDAK divalidasi di sini
+    if (!tanggal || !keterangan || !jenis || !jumlah) { // Saldo DIHAPUS dari validasi ini
       return res.status(400).json({
         success: false,
-        message: 'Semua field harus diisi'
+        message: 'Semua field (kecuali saldo) harus diisi' // Pesan error bisa disesuaikan
       });
     }
+
+    // --- LOGIKA PENTING: Hitung saldo terkini di backend ---
+    // Cari saldo terakhir sebelum menambahkan transaksi baru
+    const lastKasItem = await RekapKas.findOne({
+      where: {
+        rt: rt || req.user.rt, // Pastikan filter RT/RW sesuai dengan transaksi yang akan dibuat
+        rw: rw || req.user.rw,
+      },
+      order: [['tanggal', 'DESC'], ['createdAt', 'DESC']], // Urutkan untuk mendapatkan yang terbaru
+    });
+
+    let currentCalculatedSaldo = lastKasItem ? Number(lastKasItem.saldo) : 0; // Saldo awal jika tidak ada transaksi sebelumnya
+
+    const parsedJumlah = Number(jumlah); // Pastikan jumlah adalah angka
+    if (jenis === "pemasukan") {
+      currentCalculatedSaldo += parsedJumlah;
+    } else if (jenis === "pengeluaran") {
+      currentCalculatedSaldo -= parsedJumlah;
+    }
+    // --- Akhir logika hitung saldo ---
     
-    // Validasi RT/RW
-    if (req.user.role === 'rt' && rt !== req.user.rt) {
+    // Validasi RT/RW (tetap ada)
+    if (req.user.role === 'rt' && rt && rt !== req.user.rt) { // Tambahkan cek 'rt' untuk menghindari undefined
       return res.status(403).json({
         success: false,
         message: 'Anda hanya dapat menambahkan data untuk RT Anda sendiri'
       });
     }
     
-    if (req.user.role === 'rw' && rw !== req.user.rw) {
+    if (req.user.role === 'rw' && rw && rw !== req.user.rw) { // Tambahkan cek 'rw' untuk menghindari undefined
       return res.status(403).json({
         success: false,
         message: 'Anda hanya dapat menambahkan data untuk RW Anda sendiri'
       });
     }
     
-    // Buat rekap kas baru
+    // Buat rekap kas baru dengan saldo yang sudah dihitung
     const rekapKas = await RekapKas.create({
       tanggal,
       keterangan,
       jenis,
-      jumlah,
-      saldo,
+      jumlah: parsedJumlah, // Pastikan ini angka
+      saldo: currentCalculatedSaldo, // Gunakan saldo yang dihitung di backend
       rt: rt || req.user.rt,
       rw: rw || req.user.rw,
       user_id: userId
@@ -122,6 +146,7 @@ const createRekapKas = async (req, res) => {
   }
 };
 
+// ... (bagian bawah kode yang sama) ...
 // Update rekap kas
 const updateRekapKas = async (req, res) => {
   try {
