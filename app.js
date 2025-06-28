@@ -80,6 +80,8 @@ const rekapKasRouter = require('./routes/rekapKas');
 app.use('/api/users', usersRouter);
 app.use('/api/rekap-kas', rekapKasRouter);
 
+const kasBulananRoutes = require('./routes/kasBulanan');
+app.use('/api/kas-bulanan', kasBulananRoutes);
 
 
 // Debug admin login route (pindahkan ke authRoutes jika perlu)
