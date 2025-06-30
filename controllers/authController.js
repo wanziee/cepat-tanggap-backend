@@ -206,7 +206,6 @@ const userData = {
     });
   }
 };
-
 const updateProfile = async (req, res) => {
   try {
     if (!req.user) {
@@ -238,6 +237,8 @@ const updateProfile = async (req, res) => {
       if (emailUsed) {
         return res.status(400).json({ message: 'Email sudah digunakan oleh pengguna lain' });
       }
+
+      updateData.email = email; // ✅ Tambahkan ini
     }
 
     const user = await User.findByPk(userId);

@@ -20,18 +20,35 @@ router.use((req, res, next) => {
 // Autentikasi
 router.use(auth);
 
-// Role check
+// Role check untuk operasi baca (GET) - izinkan warga
+router.get('/', (req, res, next) => {
+  console.log('Memeriksa role user untuk akses baca:', req.user);
+  const allowedRoles = ['admin', 'rt', 'rw', 'warga'];
+  if (req.user && allowedRoles.includes(req.user.role)) {
+    console.log(`Akses baca diberikan untuk ${req.user.role}`);
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    message: 'Akses ditolak. Anda tidak memiliki izin untuk melihat data ini.'
+  });
+});
+
+// Role check untuk operasi tulis (POST, PUT, DELETE)
 router.use((req, res, next) => {
-  console.log('Memeriksa role user:', req.user);
+  // Skip untuk GET karena sudah dihandle di atas
+  if (req.method === 'GET') return next();
+  
+  console.log('Memeriksa role user untuk akses tulis:', req.user);
   const allowedRoles = ['admin', 'rt', 'rw'];
   if (req.user && allowedRoles.includes(req.user.role)) {
-    console.log(`Akses diberikan untuk ${req.user.role}`);
+    console.log(`Akses tulis diberikan untuk ${req.user.role}`);
     return next();
   }
 
   return res.status(403).json({
     success: false,
-    message: 'Akses ditolak. Hanya admin, RT, atau RW yang diizinkan.'
+    message: 'Akses ditolak. Hanya admin, RT, atau RW yang diizinkan untuk mengubah data.'
   });
 });
 
