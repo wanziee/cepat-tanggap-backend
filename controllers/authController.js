@@ -184,7 +184,8 @@ const userData = {
       sameSite: 'lax',
       maxAge: 8 * 60 * 60 * 1000, // 8 jam
       path: '/',
-      domain: 'localhost'
+      // domain: 'localhost'
+        domain: process.env.NODE_ENV === 'production' ? '.railway.app' : 'localhost'
     });
 
     // Response
