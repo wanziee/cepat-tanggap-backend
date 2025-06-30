@@ -15,10 +15,10 @@
   },
   "production": {
     "username": "postgres",
-    "password": "YDEPaolVwBniTFjoLqXgsfJAWxOQmviE",
+    "password": "flnHTQjhQJodQmFOMgGfyCSNaUksWHIT",
     "database": "railway",
-    "host": "yamanote.proxy.rlwy.net",
-    "port": 39040,
+    "host": "maglev.proxy.rlwy.net",
+    "port": 44783,
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {
